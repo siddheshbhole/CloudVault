@@ -1,0 +1,339 @@
+.splash-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 99999;
+  /* Subtle, elegant off-white/slate vignette */
+  background: radial-gradient(circle at center, #f4f6f9 0%, #e8ecf2 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  opacity: 1;
+  transition: opacity 0.45s cubic-bezier(0.4, 0, 0.2, 1);
+  will-change: opacity;
+}
+
+.splash-overlay.fade-out {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Master Centered Wrapper - Locks the entire combined composition in the absolute center */
+.splash-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  height: 130px;
+}
+
+/* Shield Component */
+.splash-shield-wrapper {
+  position: relative;
+  width: 82px;
+  height: 96px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  /* Start centered, then shift left by half the total unit */
+  transform: translateX(0);
+  animation: shieldMoveLeft 0.65s cubic-bezier(0.16, 1, 0.3, 1) 1.25s forwards;
+  will-change: transform;
+}
+
+.splash-shield-svg {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  filter: drop-shadow(0 6px 20px rgba(37, 99, 235, 0.25));
+}
+
+/* 1. Shield Outline & Initial Appearance */
+.shield-path {
+  fill: transparent;
+  stroke: #2563eb;
+  stroke-width: 2.6;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+  animation: 
+    shieldStroke 0.5s ease-out forwards,
+    shieldFillGradient 0.55s ease-in-out 0.45s forwards;
+}
+
+/* 3. Checkmark Drawing */
+.shield-check-path {
+  stroke-dasharray: 40;
+  stroke-dashoffset: 40;
+  animation: checkDraw 0.45s cubic-bezier(0.65, 0, 0.45, 1) 0.85s forwards;
+}
+
+/* Pulse on checkmark completion */
+.shield-pulse-ring {
+  position: absolute;
+  inset: -6px;
+  border-radius: 24px;
+  border: 2px solid rgba(37, 99, 235, 0.4);
+  opacity: 0;
+  animation: shieldPulse 0.5s ease-out 1.2s forwards;
+  pointer-events: none;
+}
+
+/* 5. Brand Typography - Placed with clean breathing room beside the shield */
+.splash-brand {
+  position: absolute;
+  left: 50%;
+  margin-left: 61px; /* 41px shield half-width + 20px breathing space */
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  white-space: nowrap;
+  pointer-events: none;
+  user-select: none;
+  transform: translateX(0);
+  animation: brandMoveIntoCenter 0.65s cubic-bezier(0.16, 1, 0.3, 1) 1.25s forwards;
+}
+
+/* Staggered slide-in wrapper for each word */
+.brand-word-wrapper {
+  overflow: hidden;
+  display: block;
+}
+
+.brand-text-cloud {
+  display: block;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-size: 3.25rem;
+  font-weight: 800;
+  line-height: 0.92;
+  letter-spacing: -0.045em;
+  color: #1d4ed8;
+  background: linear-gradient(135deg, #1d4ed8 0%, #2563eb 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  /* Word 1 slides in */
+  opacity: 0;
+  transform: translateX(-20px);
+  animation: wordSlideIn 0.55s cubic-bezier(0.16, 1, 0.3, 1) 1.35s forwards;
+}
+
+.brand-text-vault {
+  display: block;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-size: 3.25rem;
+  font-weight: 800;
+  line-height: 0.98;
+  letter-spacing: -0.045em;
+  color: #0f172a;
+  /* Word 2 slides in slightly after */
+  opacity: 0;
+  transform: translateX(-20px);
+  animation: wordSlideIn 0.55s cubic-bezier(0.16, 1, 0.3, 1) 1.48s forwards;
+}
+
+/* Animated accent underline */
+.brand-underline-track {
+  width: 100%;
+  height: 3px;
+  background-color: transparent;
+  margin-top: 4px;
+  border-radius: 9999px;
+  overflow: hidden;
+  position: relative;
+}
+
+.brand-underline-fill {
+  width: 100%;
+  height: 100%;
+  border-radius: 9999px;
+  background: linear-gradient(90deg, #2563eb 0%, #60a5fa 100%);
+  box-shadow: 0 1px 6px rgba(37, 99, 235, 0.4);
+  transform: scaleX(0);
+  transform-origin: left;
+  animation: underlineExpand 0.55s cubic-bezier(0.16, 1, 0.3, 1) 1.55s forwards;
+}
+
+/* Keyframes */
+@keyframes shieldStroke {
+  0% {
+    stroke-dasharray: 200;
+    stroke-dashoffset: 200;
+    opacity: 0;
+    transform: scale(0.85);
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    stroke-dashoffset: 0;
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes shieldFillGradient {
+  0% {
+    fill: transparent;
+  }
+  100% {
+    fill: url(#shieldGrad);
+  }
+}
+
+@keyframes checkDraw {
+  0% {
+    stroke-dashoffset: 40;
+    opacity: 0;
+  }
+  30% {
+    opacity: 1;
+  }
+  100% {
+    stroke-dashoffset: 0;
+    opacity: 1;
+  }
+}
+
+@keyframes shieldPulse {
+  0% {
+    transform: scale(0.9);
+    opacity: 0.7;
+  }
+  100% {
+    transform: scale(1.3);
+    opacity: 0;
+  }
+}
+
+/* Synchronous shift: moves shield and text together into true center with balanced gap */
+@keyframes shieldMoveLeft {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-108px);
+  }
+}
+
+/* Synchronous shift: moves brand text into the center lockup */
+@keyframes brandMoveIntoCenter {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-108px);
+  }
+}
+
+@keyframes wordSlideIn {
+  0% {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes underlineExpand {
+  0% {
+    transform: scaleX(0);
+    opacity: 0;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    transform: scaleX(1);
+    opacity: 1;
+  }
+}
+
+/* Dev Replay Floating Button */
+.splash-replay-btn {
+  position: fixed;
+  bottom: 16px;
+  left: 16px;
+  z-index: 9999;
+  background: #ffffff;
+  border: 1px solid var(--border-light, #e2e8f0);
+  border-radius: 9999px;
+  padding: 6px 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #64748b;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.06);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.splash-replay-btn:hover {
+  background: #f8fafc;
+  color: #2563eb;
+  border-color: #cbd5e1;
+  transform: translateY(-1px);
+}
+
+/* Reduced Motion Mode */
+@media (prefers-reduced-motion: reduce) {
+  .splash-overlay {
+    transition: opacity 0.2s ease;
+  }
+  .splash-shield-wrapper,
+  .shield-path,
+  .shield-check-path,
+  .shield-pulse-ring,
+  .brand-text-cloud,
+  .brand-text-vault,
+  .brand-underline-fill,
+  .splash-brand {
+    animation: none !important;
+    opacity: 1 !important;
+    stroke-dashoffset: 0 !important;
+    transform: none !important;
+  }
+  .splash-container {
+    gap: 12px;
+  }
+  .splash-brand {
+    position: static;
+    margin-left: 0;
+  }
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 480px) {
+  .splash-shield-wrapper {
+    width: 68px;
+    height: 80px;
+    animation: shieldMoveLeftMobile 0.65s cubic-bezier(0.16, 1, 0.3, 1) 1.25s forwards;
+  }
+  .splash-brand {
+    margin-left: 48px; /* 34px shield half-width + 14px gap */
+    animation: brandMoveCenterMobile 0.65s cubic-bezier(0.16, 1, 0.3, 1) 1.25s forwards;
+  }
+  .brand-text-cloud,
+  .brand-text-vault {
+    font-size: 2.35rem;
+  }
+  @keyframes shieldMoveLeftMobile {
+    0% {
+      transform: translateX(0);
+    }
+    100% {
+      transform: translateX(-86px);
+    }
+  }
+  @keyframes brandMoveCenterMobile {
+    0% {
+      transform: translateX(0);
+    }
+    100% {
+      transform: translateX(-86px);
+    }
+  }
+}

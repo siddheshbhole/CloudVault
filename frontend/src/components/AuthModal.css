@@ -1,0 +1,214 @@
+.auth-overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(15, 23, 42, 0.45);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+}
+
+.auth-card {
+  background: #ffffff;
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+  width: 100%;
+  max-width: 420px;
+  padding: 34px 28px;
+}
+
+.auth-header {
+  text-align: center;
+  margin-bottom: 22px;
+}
+
+.auth-icon-badge {
+  width: 52px;
+  height: 52px;
+  background-color: var(--accent-light);
+  color: var(--accent);
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 14px;
+}
+
+.auth-header h2 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--text-main);
+  letter-spacing: -0.02em;
+  margin-bottom: 6px;
+}
+
+.auth-header p {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.auth-alert {
+  padding: 10px 14px;
+  border-radius: var(--radius-sm);
+  font-size: 0.825rem;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.auth-alert.error {
+  background-color: var(--danger-bg);
+  color: var(--danger-text);
+  border: 1px solid #fecaca;
+}
+
+.auth-alert.success {
+  background-color: var(--success-bg);
+  color: var(--success-text);
+  border: 1px solid #a7f3d0;
+}
+
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  text-align: left;
+}
+
+.form-group label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-main);
+}
+
+.input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.field-icon {
+  position: absolute;
+  left: 12px;
+  color: var(--text-muted);
+}
+
+.input-wrapper input {
+  width: 100%;
+  padding: 10px 14px 10px 38px;
+  font-size: 0.9rem;
+  font-family: inherit;
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-sm);
+  outline: none;
+  background-color: #ffffff;
+  color: var(--text-main);
+  transition: border-color 0.15s ease;
+}
+
+.input-wrapper input:focus {
+  border-color: var(--accent);
+}
+
+.submit-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background-color: var(--accent);
+  color: #ffffff;
+  font-weight: 600;
+  font-size: 0.9rem;
+  padding: 11px;
+  border-radius: var(--radius-sm);
+  transition: background-color 0.15s ease;
+  margin-top: 4px;
+}
+
+.submit-btn:hover:not(:disabled) {
+  background-color: var(--accent-hover);
+}
+
+.submit-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.auth-divider {
+  display: flex;
+  align-items: center;
+  margin: 18px 0 16px 0;
+  text-align: center;
+}
+
+.auth-divider::before,
+.auth-divider::after {
+  content: '';
+  flex: 1;
+  border-bottom: 1px solid var(--border-light);
+}
+
+.auth-divider span {
+  padding: 0 10px;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.guest-btn-full {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 11px 16px;
+  border: 1px solid var(--border-light);
+  background-color: var(--bg-surface);
+  border-radius: var(--radius-sm);
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-main);
+  transition: all 0.15s ease;
+}
+
+.guest-btn-full:hover:not(:disabled) {
+  background-color: var(--bg-hover);
+  border-color: #cbd5e1;
+}
+
+.guest-btn-full:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.auth-footer {
+  text-align: center;
+  font-size: 0.825rem;
+  color: var(--text-muted);
+  padding-top: 14px;
+  margin-top: 18px;
+  border-top: 1px solid var(--border-light);
+}
+
+.toggle-link {
+  color: var(--accent);
+  font-weight: 600;
+  text-decoration: underline;
+  padding: 0;
+  margin-left: 2px;
+}
+
+.toggle-link:hover {
+  color: var(--accent-hover);
+}
