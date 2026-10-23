@@ -460,92 +460,94 @@ export default function App() {
                   )}
                 </div>
               </section>
-
-              {/* Technologies & Core Concepts Footer */}
-              <footer className="app-footer">
-                <div className="footer-top">
-                  <div className="footer-brand">
-                    <div className="brand" style={{ gap: '8px' }}>
-                      <div className="brand-icon" style={{ width: '32px', height: '32px' }}>
-                        <ShieldCheck size={18} />
-                      </div>
-                      <span style={{ fontWeight: 800, fontSize: '1.05rem', color: 'var(--text-main)' }}>CloudVault</span>
-                    </div>
-                    <p className="footer-tagline">
-                      Secure cloud file storage with client-side block segmentation, AES-256-GCM encryption, and deterministic reconstruction.
-                    </p>
-                  </div>
-
-                  <div className="footer-tech-grid">
-                    <div className="footer-tech-col">
-                      <span className="footer-col-title">Core Cryptography</span>
-                      <ul className="footer-links">
-                        <li>
-                          <a href="https://en.wikipedia.org/wiki/File_splitting" target="_blank" rel="noopener noreferrer">
-                            <span>File Segmentation (Chunking)</span>
-                            <ExternalLink size={12} />
-                          </a>
-                        </li>
-                        <li>
-                          <a href="https://en.wikipedia.org/wiki/Galois/Counter_Mode" target="_blank" rel="noopener noreferrer">
-                            <span>AES-256-GCM (Authenticated AEAD)</span>
-                            <ExternalLink size={12} />
-                          </a>
-                        </li>
-                        <li>
-                          <a href="https://en.wikipedia.org/wiki/Cryptographic_nonce" target="_blank" rel="noopener noreferrer">
-                            <span>96-bit Cryptographic Nonce</span>
-                            <ExternalLink size={12} />
-                          </a>
-                        </li>
-                        <li>
-                          <a href="https://en.wikipedia.org/wiki/SHA-2" target="_blank" rel="noopener noreferrer">
-                            <span>SHA-256 Integrity Checksums</span>
-                            <ExternalLink size={12} />
-                          </a>
-                        </li>
-                      </ul>
-                    </div>
-
-                    <div className="footer-tech-col">
-                      <span className="footer-col-title">Cloud & Backend</span>
-                      <ul className="footer-links">
-                        <li>
-                          <a href="https://supabase.com/docs/guides/storage" target="_blank" rel="noopener noreferrer">
-                            <span>Supabase Private Storage</span>
-                            <ExternalLink size={12} />
-                          </a>
-                        </li>
-                        <li>
-                          <a href="https://supabase.com/docs/guides/auth" target="_blank" rel="noopener noreferrer">
-                            <span>Supabase Auth & JWT</span>
-                            <ExternalLink size={12} />
-                          </a>
-                        </li>
-                        <li>
-                          <a href="https://fastapi.tiangolo.com/" target="_blank" rel="noopener noreferrer">
-                            <span>Python FastAPI Engine</span>
-                            <ExternalLink size={12} />
-                          </a>
-                        </li>
-                        <li>
-                          <a href="https://www.postgresql.org/docs/current/ddl-rowsecurity.html" target="_blank" rel="noopener noreferrer">
-                            <span>PostgreSQL Row Level Security (RLS)</span>
-                            <ExternalLink size={12} />
-                          </a>
-                        </li>
-                      </ul>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="footer-bottom">
-                  <span>© {new Date().getFullYear()} CloudVault Project. All cryptographic operations verified.</span>
-                  <span style={{ color: 'var(--text-muted)' }}>React + Vite • FastAPI • Supabase</span>
-                </div>
-              </footer>
             </div>
           </div>
+
+          {/* Full-Bleed Edge-to-Edge Technologies Footer */}
+          <footer className="app-footer-fullwidth">
+            <div className="content-inner">
+              <div className="footer-top">
+                <div className="footer-brand">
+                  <div className="brand" style={{ gap: '8px' }}>
+                    <div className="brand-icon" style={{ width: '32px', height: '32px' }}>
+                      <ShieldCheck size={18} />
+                    </div>
+                    <span style={{ fontWeight: 800, fontSize: '1.05rem', color: 'var(--text-main)' }}>CloudVault</span>
+                  </div>
+                  <p className="footer-tagline">
+                    Secure cloud file storage with client-side block segmentation, AES-256-GCM encryption, and deterministic reconstruction.
+                  </p>
+                </div>
+
+                <div className="footer-tech-grid">
+                  <div className="footer-tech-col">
+                    <span className="footer-col-title">Core Cryptography</span>
+                    <ul className="footer-links">
+                      <li>
+                        <a href="https://en.wikipedia.org/wiki/File_splitting" target="_blank" rel="noopener noreferrer">
+                          <span>File Segmentation (Chunking)</span>
+                          <ExternalLink size={12} />
+                        </a>
+                      </li>
+                      <li>
+                        <a href="https://en.wikipedia.org/wiki/Galois/Counter_Mode" target="_blank" rel="noopener noreferrer">
+                          <span>AES-256-GCM (Authenticated AEAD)</span>
+                          <ExternalLink size={12} />
+                        </a>
+                      </li>
+                      <li>
+                        <a href="https://en.wikipedia.org/wiki/Cryptographic_nonce" target="_blank" rel="noopener noreferrer">
+                          <span>96-bit Cryptographic Nonce</span>
+                          <ExternalLink size={12} />
+                        </a>
+                      </li>
+                      <li>
+                        <a href="https://en.wikipedia.org/wiki/SHA-2" target="_blank" rel="noopener noreferrer">
+                          <span>SHA-256 Integrity Checksums</span>
+                          <ExternalLink size={12} />
+                        </a>
+                      </li>
+                    </ul>
+                  </div>
+
+                  <div className="footer-tech-col">
+                    <span className="footer-col-title">Cloud & Backend</span>
+                    <ul className="footer-links">
+                      <li>
+                        <a href="https://supabase.com/docs/guides/storage" target="_blank" rel="noopener noreferrer">
+                          <span>Supabase Private Storage</span>
+                          <ExternalLink size={12} />
+                        </a>
+                      </li>
+                      <li>
+                        <a href="https://supabase.com/docs/guides/auth" target="_blank" rel="noopener noreferrer">
+                          <span>Supabase Auth & JWT</span>
+                          <ExternalLink size={12} />
+                        </a>
+                      </li>
+                      <li>
+                        <a href="https://fastapi.tiangolo.com/" target="_blank" rel="noopener noreferrer">
+                          <span>Python FastAPI Engine</span>
+                          <ExternalLink size={12} />
+                        </a>
+                      </li>
+                      <li>
+                        <a href="https://www.postgresql.org/docs/current/ddl-rowsecurity.html" target="_blank" rel="noopener noreferrer">
+                          <span>PostgreSQL Row Level Security (RLS)</span>
+                          <ExternalLink size={12} />
+                        </a>
+                      </li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+
+              <div className="footer-bottom">
+                <span>© {new Date().getFullYear()} CloudVault Project. All cryptographic operations verified.</span>
+                <span style={{ color: '#64748b' }}>React + Vite • FastAPI • Supabase</span>
+              </div>
+            </div>
+          </footer>
         </div>
       )}
     </>

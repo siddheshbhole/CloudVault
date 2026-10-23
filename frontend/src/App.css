@@ -655,15 +655,15 @@
 }
 
 /* ===================================================
-   Technologies & Core Concepts Footer
+   Full-Bleed Technologies & Core Concepts Footer
+   Connected to both edges of the screen
    =================================================== */
-.app-footer {
-  margin-top: 64px;
-  background-color: #e2e8f0; /* Subtle slightly darker shade than #f1f5f9 */
-  border: 1px solid #cbd5e1;
-  border-radius: var(--radius-lg);
-  padding: 36px 32px 24px 32px;
-  box-shadow: 0 4px 16px -4px rgba(15, 23, 42, 0.05);
+.app-footer-fullwidth {
+  width: 100%;
+  background-color: #e2e8f0; /* Subtle slightly darker tone than #f1f5f9 */
+  border-top: 1px solid #cbd5e1;
+  padding: 48px 0 28px 0;
+  box-shadow: 0 -4px 20px -4px rgba(15, 23, 42, 0.04);
 }
 
 .footer-top {
@@ -740,7 +740,7 @@
 }
 
 .footer-bottom {
-  padding-top: 18px;
+  padding-top: 20px;
   border-top: 1px solid #cbd5e1;
   display: flex;
   justify-content: space-between;
@@ -752,8 +752,8 @@
 }
 
 @media (max-width: 768px) {
-  .app-footer {
-    padding: 28px 20px 20px 20px;
+  .app-footer-fullwidth {
+    padding: 36px 0 20px 0;
   }
   .footer-top {
     grid-template-columns: 1fr;
