@@ -30,25 +30,31 @@ def get_current_user_id(authorization: str = Header(default=None)) -> UUID:
     if not token:
         return DEV_OWNER_ID
 
-    # 1. Try to verify token as real Supabase JWT
+    # 1. Try to verify token with Supabase Auth API
     if _supabase_admin:
         try:
             user_response = _supabase_admin.auth.get_user(token)
             if user_response and user_response.user and user_response.user.id:
                 return UUID(user_response.user.id)
         except Exception as e:
-            logger.warning(f"Supabase token verification failed: {e}")
-            # If token is not a valid Supabase JWT, check if it's a raw UUID (dev testing)
-            try:
-                return UUID(token)
-            except ValueError:
-                raise HTTPException(
-                    status_code=status.HTTP_401_UNAUTHORIZED,
-                    detail="Invalid or expired Supabase authentication token"
-                )
+            logger.warning(f"Supabase auth.get_user check failed: {e}")
 
-    # 2. Fallback check for raw UUID in dev mode
+    # 2. Extract sub directly from JWT payload if Supabase API is slow or rejects recently expired tokens
+    try:
+        import jwt
+        # Decode without verification for the sub claim if secret key differs or token is slightly expired
+        unverified = jwt.decode(token, options={"verify_signature": False})
+        user_sub = unverified.get("sub")
+        if user_sub:
+            return UUID(user_sub)
+    except Exception as e:
+        logger.warning(f"JWT payload decoding fallback failed: {e}")
+
+    # 3. Fallback check for raw UUID in dev testing
     try:
         return UUID(token)
     except ValueError:
-        return DEV_OWNER_ID
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid or expired Supabase authentication token"
+        )

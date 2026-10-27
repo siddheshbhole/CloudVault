@@ -20,10 +20,39 @@ export const setAuthToken = (token) => {
   authToken = token;
 };
 
+const isTokenExpired = (token) => {
+  if (!token) return true;
+  try {
+    const parts = token.split('.');
+    if (parts.length !== 3) return false;
+    const payload = JSON.parse(atob(parts[1]));
+    if (!payload.exp) return false;
+    // Check if token expires within the next 30 seconds
+    return (payload.exp * 1000) < (Date.now() + 30000);
+  } catch {
+    return false;
+  }
+};
+
 const getFreshToken = async () => {
   try {
     const { data: { session } } = await supabase.auth.getSession();
     if (session?.access_token) {
+      if (isTokenExpired(session.access_token)) {
+        // Automatically request a fresh token via refresh token
+        const { data: refreshed, error } = await supabase.auth.refreshSession();
+        if (refreshed?.session?.access_token) {
+          authToken = refreshed.session.access_token;
+          return refreshed.session.access_token;
+        }
+        if (error) {
+          console.warn('Session refresh failed:', error);
+          // If refresh token is truly invalid/expired, sign out to reset clean state
+          await supabase.auth.signOut();
+          authToken = null;
+          return null;
+        }
+      }
       authToken = session.access_token;
       return session.access_token;
     }
@@ -57,6 +86,10 @@ export const apiClient = {
       headers
     });
     if (!res.ok) {
+      if (res.status === 401) {
+        await supabase.auth.signOut().catch(() => {});
+        throw new Error('Your session expired. Please sign in again.');
+      }
       const err = await res.json().catch(() => ({}));
       throw new Error(err.detail || 'Failed to fetch files');
     }
@@ -69,6 +102,10 @@ export const apiClient = {
       headers
     });
     if (!res.ok) {
+      if (res.status === 401) {
+        await supabase.auth.signOut().catch(() => {});
+        throw new Error('Your session expired. Please sign in again.');
+      }
       const err = await res.json().catch(() => ({}));
       throw new Error(err.detail || 'Failed to retrieve file details');
     }
@@ -87,6 +124,10 @@ export const apiClient = {
     });
 
     if (!res.ok) {
+      if (res.status === 401) {
+        await supabase.auth.signOut().catch(() => {});
+        throw new Error('Your session expired. Please sign in again.');
+      }
       const err = await res.json().catch(() => ({}));
       throw new Error(err.detail || 'Failed to upload and segment file');
     }
