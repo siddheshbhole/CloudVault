@@ -419,102 +419,60 @@ export default function App() {
                       <p>Upload a file above to view segmentation and encrypted cloud storage in action.</p>
                     </div>
                   ) : (
-                    <>
-                      {/* Desktop Table View */}
-                      <div className="table-responsive desktop-only">
-                        <table className="files-table">
-                          <thead>
-                            <tr>
-                              <th>File Name</th>
-                              <th>Size</th>
-                              <th>Blocks</th>
-                              <th>Status</th>
-                              <th>Uploaded At</th>
-                              <th style={{ textAlign: 'right' }}>Actions</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {files.map((file) => (
-                              <tr key={file.id}>
-                                <td>
-                                  <div className="file-name-cell">
-                                    <FileText size={18} color="#64748b" />
-                                    <span>{file.original_name}</span>
-                                  </div>
-                                </td>
-                                <td>{formatBytes(file.original_size)}</td>
-                                <td>
-                                  <span title={`${file.chunk_size ? formatBytes(file.chunk_size) : '1 MB'} chunks`}>
-                                    {file.block_count} {file.block_count === 1 ? 'block' : 'blocks'}
-                                  </span>
-                                </td>
-                                <td>
-                                  <span className={`badge ${file.status}`}>
-                                    {file.status}
-                                  </span>
-                                </td>
-                                <td>{formatDate(file.created_at)}</td>
-                                <td>
-                                  <div className="action-buttons" style={{ justifyContent: 'flex-end' }}>
-                                    <button 
-                                      className="btn-icon" 
-                                      title="Decrypt & Download"
-                                      onClick={() => handleDownload(file.id, file.original_name)}
-                                    >
-                                      <Download size={16} />
-                                    </button>
-                                    <button 
-                                      className="btn-icon delete" 
-                                      title="Delete file & objects"
-                                      onClick={() => handleDelete(file.id, file.original_name)}
-                                    >
-                                      <Trash2 size={16} />
-                                    </button>
-                                  </div>
-                                </td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      </div>
-
-                      {/* Mobile File Cards View */}
-                      <div className="mobile-files-list mobile-only">
+                    <table className="files-table">
+                      <thead>
+                        <tr>
+                          <th>File Name</th>
+                          <th>Size</th>
+                          <th>Blocks</th>
+                          <th>Status</th>
+                          <th>Uploaded At</th>
+                          <th style={{ textAlign: 'right' }}>Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody>
                         {files.map((file) => (
-                          <div key={file.id} className="mobile-file-card">
-                            <div className="mobile-file-header">
-                              <div className="mobile-file-title">
-                                <FileText size={20} className="mobile-file-icon" />
-                                <div className="mobile-file-names">
-                                  <span className="mobile-file-name">{file.original_name}</span>
-                                  <span className="mobile-file-meta">
-                                    {formatBytes(file.original_size)} • {file.block_count} {file.block_count === 1 ? 'block' : 'blocks'}
-                                  </span>
-                                </div>
+                          <tr key={file.id}>
+                            <td>
+                              <div className="file-name-cell">
+                                <FileText size={18} color="#64748b" />
+                                <span>{file.original_name}</span>
                               </div>
-                              <span className={`badge ${file.status}`}>{file.status}</span>
-                            </div>
-
-                            <div className="mobile-file-actions">
-                              <button 
-                                className="mobile-btn download"
-                                onClick={() => handleDownload(file.id, file.original_name)}
-                              >
-                                <Download size={16} />
-                                <span>Download</span>
-                              </button>
-                              <button 
-                                className="mobile-btn delete"
-                                onClick={() => handleDelete(file.id, file.original_name)}
-                              >
-                                <Trash2 size={16} />
-                                <span>Delete</span>
-                              </button>
-                            </div>
-                          </div>
+                            </td>
+                            <td>{formatBytes(file.original_size)}</td>
+                            <td>
+                              <span title={`${file.chunk_size ? formatBytes(file.chunk_size) : '1 MB'} chunks`}>
+                                {file.block_count} {file.block_count === 1 ? 'block' : 'blocks'}
+                              </span>
+                            </td>
+                            <td>
+                              <span className={`badge ${file.status}`}>
+                                {file.status}
+                              </span>
+                            </td>
+                            <td>{formatDate(file.created_at)}</td>
+                            <td>
+                              <div className="action-buttons" style={{ justifyContent: 'flex-end' }}>
+                                <button 
+                                  className="btn-icon" 
+                                  title="Decrypt & Download"
+                                  onClick={() => handleDownload(file.id, file.original_name)}
+                                >
+                                  <Download size={16} />
+                                </button>
+                                <button 
+                                  className="btn-icon delete" 
+                                  title="Delete file & objects"
+                                  onClick={() => handleDelete(file.id, file.original_name)}
+                                >
+                                  <Trash2 size={16} />
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
                         ))}
-                      </div>
-                    </>
+                      </tbody>
+                    </table>
                   )}
                 </div>
               </section>
