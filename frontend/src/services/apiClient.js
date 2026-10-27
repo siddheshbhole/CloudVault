@@ -1,4 +1,18 @@
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000/api/v1';
+import { supabase } from './supabaseClient';
+
+const getBaseUrl = () => {
+  const envUrl = import.meta.env.VITE_API_BASE_URL;
+  if (envUrl && !envUrl.includes('127.0.0.1') && !envUrl.includes('localhost')) {
+    return envUrl;
+  }
+  // If accessing from phone/LAN IP (e.g. 192.168.x.x), route API calls to the same host IP
+  if (typeof window !== 'undefined' && window.location?.hostname && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+    return `http://${window.location.hostname}:8000/api/v1`;
+  }
+  return envUrl || 'http://127.0.0.1:8000/api/v1';
+};
+
+const API_BASE_URL = getBaseUrl();
 
 let authToken = null;
 
@@ -6,10 +20,24 @@ export const setAuthToken = (token) => {
   authToken = token;
 };
 
-const getHeaders = (extraHeaders = {}) => {
+const getFreshToken = async () => {
+  try {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session?.access_token) {
+      authToken = session.access_token;
+      return session.access_token;
+    }
+  } catch (err) {
+    console.error('Error getting fresh auth session:', err);
+  }
+  return authToken;
+};
+
+const getHeaders = async (extraHeaders = {}) => {
   const headers = { ...extraHeaders };
-  if (authToken) {
-    headers['Authorization'] = `Bearer ${authToken}`;
+  const token = await getFreshToken();
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
   }
   return headers;
 };
@@ -24,8 +52,9 @@ export const apiClient = {
   },
 
   async listFiles() {
+    const headers = await getHeaders();
     const res = await fetch(`${API_BASE_URL}/files`, {
-      headers: getHeaders()
+      headers
     });
     if (!res.ok) {
       const err = await res.json().catch(() => ({}));
@@ -35,8 +64,9 @@ export const apiClient = {
   },
 
   async getFileDetail(fileId) {
+    const headers = await getHeaders();
     const res = await fetch(`${API_BASE_URL}/files/${fileId}`, {
-      headers: getHeaders()
+      headers
     });
     if (!res.ok) {
       const err = await res.json().catch(() => ({}));
@@ -48,10 +78,11 @@ export const apiClient = {
   async uploadFile(file) {
     const formData = new FormData();
     formData.append('file', file);
+    const headers = await getHeaders();
 
     const res = await fetch(`${API_BASE_URL}/files`, {
       method: 'POST',
-      headers: getHeaders(),
+      headers,
       body: formData,
     });
 
@@ -63,8 +94,9 @@ export const apiClient = {
   },
 
   async downloadFile(fileId, filename) {
+    const headers = await getHeaders();
     const res = await fetch(`${API_BASE_URL}/files/${fileId}/download`, {
-      headers: getHeaders()
+      headers
     });
     if (!res.ok) {
       const err = await res.json().catch(() => ({}));
@@ -82,9 +114,10 @@ export const apiClient = {
   },
 
   async deleteFile(fileId) {
+    const headers = await getHeaders();
     const res = await fetch(`${API_BASE_URL}/files/${fileId}`, {
       method: 'DELETE',
-      headers: getHeaders()
+      headers
     });
     if (!res.ok && res.status !== 204) {
       const err = await res.json().catch(() => ({}));

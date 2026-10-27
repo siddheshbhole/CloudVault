@@ -9,17 +9,11 @@ app = FastAPI(
     version="1.0.0"
 )
 
-# CORS configuration supporting comma-separated origins, localhost, and Vercel
-frontend_origins = [orig.strip() for orig in settings.FRONTEND_ORIGIN.split(",") if orig.strip()]
-for default_orig in ["http://localhost:5173", "http://127.0.0.1:5173"]:
-    if default_orig not in frontend_origins:
-        frontend_origins.append(default_orig)
-
+# CORS configuration supporting Vercel, local testing, and configured FRONTEND_ORIGIN
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=frontend_origins,
-    allow_origin_regex=r"https://.*\.vercel\.app",  # Automatically allows all Vercel preview & production deployments
-    allow_credentials=True,
+    allow_origins=["*"],
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )

@@ -77,6 +77,22 @@ export default function App() {
       const data = await apiClient.listFiles();
       setFiles(data);
     } catch (err) {
+      if (err.message && err.message.includes('expired')) {
+        // Attempt immediate token refresh
+        const { data: refreshData } = await supabase.auth.refreshSession();
+        if (refreshData?.session) {
+          setSession(refreshData.session);
+          setAuthToken(refreshData.session.access_token);
+          try {
+            const retryData = await apiClient.listFiles();
+            setFiles(retryData);
+            return;
+          } catch (retryErr) {
+            showNotice(retryErr.message || 'Session expired. Please sign in again.', 'error');
+            return;
+          }
+        }
+      }
       showNotice(err.message || 'Could not load files', 'error');
     } finally {
       setLoading(false);
