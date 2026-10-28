@@ -10,6 +10,7 @@ class FileMetadataBase(BaseModel):
     original_size: int
     chunk_size: int
     block_count: int
+    folder_id: Optional[UUID] = None
 
 class FileCreate(FileMetadataBase):
     pass

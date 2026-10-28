@@ -26,7 +26,15 @@ import {
   Server,
   FolderLock,
   Shield,
-  Binary
+  Binary,
+  FolderPlus,
+  Folder,
+  FolderOpen,
+  ChevronRight,
+  ChevronDown,
+  Pencil,
+  Check,
+  X
 } from 'lucide-react';
 import './App.css';
 
@@ -35,11 +43,22 @@ export default function App() {
   const [session, setSession] = useState(null);
   const [authChecking, setAuthChecking] = useState(true);
   const [files, setFiles] = useState([]);
+  const [folders, setFolders] = useState([]);
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const [notification, setNotification] = useState(null);
   const fileInputRef = useRef(null);
+
+  // Folder state
+  const [expandedFolders, setExpandedFolders] = useState(new Set());
+  const [renamingFolderId, setRenamingFolderId] = useState(null);
+  const [renameValue, setRenameValue] = useState('');
+  const [newFolderEditId, setNewFolderEditId] = useState(null);
+  const [dragOverFolderId, setDragOverFolderId] = useState(null);
+  const [draggingFileId, setDraggingFileId] = useState(null);
+  const [showDeleteModal, setShowDeleteModal] = useState(null); // folder object or null
+  const renameInputRef = useRef(null);
 
   // Initialize Supabase Auth session listener
   useEffect(() => {
@@ -63,12 +82,21 @@ export default function App() {
     return () => subscription.unsubscribe();
   }, []);
 
-  // When session changes or on load, fetch files
+  // When session changes or on load, fetch files and folders
   useEffect(() => {
     if (session) {
       fetchFiles();
+      fetchFolders();
     }
   }, [session]);
+
+  // Focus rename input when editing
+  useEffect(() => {
+    if ((renamingFolderId || newFolderEditId) && renameInputRef.current) {
+      renameInputRef.current.focus();
+      renameInputRef.current.select();
+    }
+  }, [renamingFolderId, newFolderEditId]);
 
   const fetchFiles = async () => {
     if (!session) return;
@@ -99,10 +127,25 @@ export default function App() {
     }
   };
 
+  const fetchFolders = async () => {
+    if (!session) return;
+    try {
+      const { data, error } = await supabase
+        .from('folders')
+        .select('*')
+        .order('created_at', { ascending: true });
+      if (error) throw error;
+      setFolders(data || []);
+    } catch (err) {
+      console.error('Could not load folders:', err);
+    }
+  };
+
   const handleSignOut = async () => {
     await supabase.auth.signOut();
     setSession(null);
     setFiles([]);
+    setFolders([]);
     setAuthToken(null);
   };
 
@@ -148,6 +191,181 @@ export default function App() {
     }
   };
 
+  // ===== Folder Operations =====
+
+  const handleCreateFolder = async () => {
+    if (!session?.user?.id) return;
+    try {
+      const { data, error } = await supabase
+        .from('folders')
+        .insert({ owner_id: session.user.id, name: 'New Folder' })
+        .select()
+        .single();
+      if (error) throw error;
+      setFolders(prev => [...prev, data]);
+      // Start inline rename for the new folder
+      setNewFolderEditId(data.id);
+      setRenameValue('New Folder');
+      setExpandedFolders(prev => new Set([...prev, data.id]));
+      showNotice('Folder created! Name it below.');
+    } catch (err) {
+      showNotice(err.message || 'Could not create folder', 'error');
+    }
+  };
+
+  const handleRenameFolder = async (folderId) => {
+    const trimmed = renameValue.trim();
+    if (!trimmed) {
+      setRenamingFolderId(null);
+      setNewFolderEditId(null);
+      return;
+    }
+    try {
+      const { error } = await supabase
+        .from('folders')
+        .update({ name: trimmed, updated_at: new Date().toISOString() })
+        .eq('id', folderId);
+      if (error) throw error;
+      setFolders(prev => prev.map(f => f.id === folderId ? { ...f, name: trimmed } : f));
+      showNotice(`Folder renamed to "${trimmed}"`);
+    } catch (err) {
+      showNotice(err.message || 'Rename failed', 'error');
+    } finally {
+      setRenamingFolderId(null);
+      setNewFolderEditId(null);
+    }
+  };
+
+  const handleDeleteFolder = async (folder, keepFiles) => {
+    try {
+      if (keepFiles) {
+        // Unset folder_id for all files in this folder (move to root)
+        const { error: updateErr } = await supabase
+          .from('files')
+          .update({ folder_id: null })
+          .eq('folder_id', folder.id);
+        if (updateErr) throw updateErr;
+      } else {
+        // Delete all files in this folder via backend API
+        const folderFiles = files.filter(f => f.folder_id === folder.id);
+        for (const file of folderFiles) {
+          try {
+            await apiClient.deleteFile(file.id);
+          } catch (err) {
+            console.error(`Failed to delete file ${file.original_name}:`, err);
+          }
+        }
+      }
+
+      // Delete the folder itself
+      const { error } = await supabase
+        .from('folders')
+        .delete()
+        .eq('id', folder.id);
+      if (error) throw error;
+
+      setFolders(prev => prev.filter(f => f.id !== folder.id));
+      setExpandedFolders(prev => {
+        const next = new Set(prev);
+        next.delete(folder.id);
+        return next;
+      });
+      showNotice(`Folder "${folder.name}" deleted`);
+      fetchFiles(); // Refresh files to reflect changes
+    } catch (err) {
+      showNotice(err.message || 'Failed to delete folder', 'error');
+    } finally {
+      setShowDeleteModal(null);
+    }
+  };
+
+  const handleMoveFileToFolder = async (fileId, folderId) => {
+    try {
+      const { error } = await supabase
+        .from('files')
+        .update({ folder_id: folderId })
+        .eq('id', fileId);
+      if (error) throw error;
+      // Update local state
+      setFiles(prev => prev.map(f => f.id === fileId ? { ...f, folder_id: folderId } : f));
+      if (folderId) {
+        setExpandedFolders(prev => new Set([...prev, folderId]));
+      }
+      const folder = folders.find(f => f.id === folderId);
+      showNotice(folderId ? `File moved to "${folder?.name || 'folder'}"` : 'File moved out of folder');
+    } catch (err) {
+      showNotice(err.message || 'Failed to move file', 'error');
+    }
+  };
+
+  const toggleFolder = (folderId) => {
+    setExpandedFolders(prev => {
+      const next = new Set(prev);
+      if (next.has(folderId)) {
+        next.delete(folderId);
+      } else {
+        next.add(folderId);
+      }
+      return next;
+    });
+  };
+
+  // ===== Drag Handlers for Files =====
+  const handleFileDragStart = (e, fileId) => {
+    e.dataTransfer.setData('text/plain', fileId);
+    e.dataTransfer.effectAllowed = 'move';
+    setDraggingFileId(fileId);
+  };
+
+  const handleFileDragEnd = () => {
+    setDraggingFileId(null);
+    setDragOverFolderId(null);
+  };
+
+  const handleFolderDragOver = (e, folderId) => {
+    e.preventDefault();
+    e.stopPropagation();
+    e.dataTransfer.dropEffect = 'move';
+    setDragOverFolderId(folderId);
+  };
+
+  const handleFolderDragLeave = (e) => {
+    e.preventDefault();
+    setDragOverFolderId(null);
+  };
+
+  const handleFolderDrop = (e, folderId) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragOverFolderId(null);
+    const fileId = e.dataTransfer.getData('text/plain');
+    if (fileId) {
+      handleMoveFileToFolder(fileId, folderId);
+    }
+    setDraggingFileId(null);
+  };
+
+  // Handle drop on root area (remove from folder)
+  const handleRootDragOver = (e) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    setDragOverFolderId('root');
+  };
+
+  const handleRootDragLeave = () => {
+    setDragOverFolderId(null);
+  };
+
+  const handleRootDrop = (e) => {
+    e.preventDefault();
+    setDragOverFolderId(null);
+    const fileId = e.dataTransfer.getData('text/plain');
+    if (fileId) {
+      handleMoveFileToFolder(fileId, null);
+    }
+    setDraggingFileId(null);
+  };
+
   // Metrics
   const totalStorage = files.reduce((acc, curr) => acc + (curr.original_size || 0), 0);
   const totalBlocks = files.reduce((acc, curr) => acc + (curr.block_count || 0), 0);
@@ -169,6 +387,149 @@ export default function App() {
       initial = displayName.charAt(0).toUpperCase();
     }
   }
+
+  // Categorize files: root files (no folder_id) and files per folder
+  const rootFiles = files.filter(f => !f.folder_id);
+  const getFilesForFolder = (folderId) => files.filter(f => f.folder_id === folderId);
+
+  // Render a single file row
+  const renderFileRow = (file, inFolder = false) => (
+    <tr 
+      key={file.id} 
+      draggable 
+      onDragStart={(e) => handleFileDragStart(e, file.id)}
+      onDragEnd={handleFileDragEnd}
+      className={`file-row ${draggingFileId === file.id ? 'dragging-file' : ''} ${inFolder ? 'in-folder-row' : ''}`}
+    >
+      <td>
+        <div className="file-name-cell">
+          <FileText size={18} color="#64748b" />
+          <span>{file.original_name}</span>
+        </div>
+      </td>
+      <td>{formatBytes(file.original_size)}</td>
+      <td>
+        <span title={`${file.chunk_size ? formatBytes(file.chunk_size) : '1 MB'} chunks`}>
+          {file.block_count} {file.block_count === 1 ? 'block' : 'blocks'}
+        </span>
+      </td>
+      <td>
+        <span className={`badge ${file.status}`}>
+          {file.status}
+        </span>
+      </td>
+      <td>{formatDate(file.created_at)}</td>
+      <td>
+        <div className="action-buttons" style={{ justifyContent: 'flex-end' }}>
+          <button 
+            className="btn-icon" 
+            title="Decrypt & Download"
+            onClick={() => handleDownload(file.id, file.original_name)}
+          >
+            <Download size={16} />
+          </button>
+          <button 
+            className="btn-icon delete" 
+            title="Delete file & objects"
+            onClick={() => handleDelete(file.id, file.original_name)}
+          >
+            <Trash2 size={16} />
+          </button>
+        </div>
+      </td>
+    </tr>
+  );
+
+  // Render a folder row + its expanded children
+  const renderFolderRow = (folder) => {
+    const isExpanded = expandedFolders.has(folder.id);
+    const folderFiles = getFilesForFolder(folder.id);
+    const isEditing = renamingFolderId === folder.id || newFolderEditId === folder.id;
+    const isDragTarget = dragOverFolderId === folder.id;
+
+    return (
+      <React.Fragment key={folder.id}>
+        <tr 
+          className={`folder-row ${isDragTarget ? 'folder-drag-over' : ''}`}
+          onDragOver={(e) => handleFolderDragOver(e, folder.id)}
+          onDragLeave={handleFolderDragLeave}
+          onDrop={(e) => handleFolderDrop(e, folder.id)}
+        >
+          <td colSpan={5}>
+            <div className="folder-name-cell" onClick={() => !isEditing && toggleFolder(folder.id)}>
+              <span className="folder-chevron">
+                {isExpanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+              </span>
+              {isExpanded ? (
+                <FolderOpen size={18} className="folder-icon-open" />
+              ) : (
+                <Folder size={18} className="folder-icon" />
+              )}
+              {isEditing ? (
+                <div className="folder-rename-inline" onClick={(e) => e.stopPropagation()}>
+                  <input
+                    ref={renameInputRef}
+                    type="text"
+                    className="folder-rename-input"
+                    value={renameValue}
+                    onChange={(e) => setRenameValue(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') handleRenameFolder(folder.id);
+                      if (e.key === 'Escape') { setRenamingFolderId(null); setNewFolderEditId(null); }
+                    }}
+                  />
+                  <button className="folder-rename-btn confirm" onClick={() => handleRenameFolder(folder.id)} title="Save">
+                    <Check size={14} />
+                  </button>
+                  <button className="folder-rename-btn cancel" onClick={() => { setRenamingFolderId(null); setNewFolderEditId(null); }} title="Cancel">
+                    <X size={14} />
+                  </button>
+                </div>
+              ) : (
+                <span className="folder-label">{folder.name}</span>
+              )}
+              <span className="folder-file-count">{folderFiles.length} file{folderFiles.length !== 1 ? 's' : ''}</span>
+            </div>
+          </td>
+          <td>
+            <div className="action-buttons" style={{ justifyContent: 'flex-end' }}>
+              <button 
+                className="btn-icon" 
+                title="Rename folder"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setRenamingFolderId(folder.id);
+                  setRenameValue(folder.name);
+                }}
+              >
+                <Pencil size={14} />
+              </button>
+              <button 
+                className="btn-icon delete" 
+                title="Delete folder"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setShowDeleteModal(folder);
+                }}
+              >
+                <Trash2 size={14} />
+              </button>
+            </div>
+          </td>
+        </tr>
+        {isExpanded && folderFiles.map(file => renderFileRow(file, true))}
+        {isExpanded && folderFiles.length === 0 && (
+          <tr className="in-folder-row folder-empty-row">
+            <td colSpan={6}>
+              <div className="folder-empty-hint">
+                Drag and drop files here to add them to this folder
+              </div>
+            </td>
+          </tr>
+        )}
+      </React.Fragment>
+    );
+  };
 
   return (
     <>
@@ -404,13 +765,23 @@ export default function App() {
               <section>
                 <div className="section-header">
                   <h2 className="section-title">Stored Files</h2>
-                  <button className="btn-icon" onClick={fetchFiles} title="Reload file list">
-                    <RefreshCw size={14} className={loading ? 'spin' : ''} />
-                  </button>
+                  <div className="section-header-actions">
+                    <button className="btn-icon" onClick={handleCreateFolder} title="Create new folder">
+                      <FolderPlus size={14} />
+                    </button>
+                    <button className="btn-icon" onClick={() => { fetchFiles(); fetchFolders(); }} title="Reload file list">
+                      <RefreshCw size={14} className={loading ? 'spin' : ''} />
+                    </button>
+                  </div>
                 </div>
 
-                <div className="files-table-card">
-                  {files.length === 0 ? (
+                <div 
+                  className={`files-table-card ${dragOverFolderId === 'root' ? 'root-drag-over' : ''}`}
+                  onDragOver={handleRootDragOver}
+                  onDragLeave={handleRootDragLeave}
+                  onDrop={handleRootDrop}
+                >
+                  {files.length === 0 && folders.length === 0 ? (
                     <div className="empty-state">
                       <div className="empty-state-icon">
                         <FileText size={40} />
@@ -431,46 +802,10 @@ export default function App() {
                         </tr>
                       </thead>
                       <tbody>
-                        {files.map((file) => (
-                          <tr key={file.id}>
-                            <td>
-                              <div className="file-name-cell">
-                                <FileText size={18} color="#64748b" />
-                                <span>{file.original_name}</span>
-                              </div>
-                            </td>
-                            <td>{formatBytes(file.original_size)}</td>
-                            <td>
-                              <span title={`${file.chunk_size ? formatBytes(file.chunk_size) : '1 MB'} chunks`}>
-                                {file.block_count} {file.block_count === 1 ? 'block' : 'blocks'}
-                              </span>
-                            </td>
-                            <td>
-                              <span className={`badge ${file.status}`}>
-                                {file.status}
-                              </span>
-                            </td>
-                            <td>{formatDate(file.created_at)}</td>
-                            <td>
-                              <div className="action-buttons" style={{ justifyContent: 'flex-end' }}>
-                                <button 
-                                  className="btn-icon" 
-                                  title="Decrypt & Download"
-                                  onClick={() => handleDownload(file.id, file.original_name)}
-                                >
-                                  <Download size={16} />
-                                </button>
-                                <button 
-                                  className="btn-icon delete" 
-                                  title="Delete file & objects"
-                                  onClick={() => handleDelete(file.id, file.original_name)}
-                                >
-                                  <Trash2 size={16} />
-                                </button>
-                              </div>
-                            </td>
-                          </tr>
-                        ))}
+                        {/* Render folders first */}
+                        {folders.map(folder => renderFolderRow(folder))}
+                        {/* Then render root-level files (not in any folder) */}
+                        {rootFiles.map(file => renderFileRow(file))}
                       </tbody>
                     </table>
                   )}
@@ -564,6 +899,43 @@ export default function App() {
               </div>
             </div>
           </footer>
+
+          {/* Folder Delete Confirmation Modal */}
+          {showDeleteModal && (
+            <div className="modal-overlay" onClick={() => setShowDeleteModal(null)}>
+              <div className="modal-card" onClick={(e) => e.stopPropagation()}>
+                <div className="modal-header">
+                  <Trash2 size={20} className="modal-icon-danger" />
+                  <h3>Delete Folder "{showDeleteModal.name}"?</h3>
+                </div>
+                <p className="modal-description">
+                  This folder contains {getFilesForFolder(showDeleteModal.id).length} file(s). What would you like to do?
+                </p>
+                <div className="modal-actions">
+                  <button 
+                    className="modal-btn keep"
+                    onClick={() => handleDeleteFolder(showDeleteModal, true)}
+                  >
+                    <FileText size={15} />
+                    <span>Keep files, delete folder only</span>
+                  </button>
+                  <button 
+                    className="modal-btn danger"
+                    onClick={() => handleDeleteFolder(showDeleteModal, false)}
+                  >
+                    <Trash2 size={15} />
+                    <span>Delete folder and all files</span>
+                  </button>
+                  <button 
+                    className="modal-btn cancel"
+                    onClick={() => setShowDeleteModal(null)}
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       )}
     </>
